@@ -28,9 +28,11 @@ def plot_mrc(workload_set, benchmarks, stats_list, graph):
                 "Benchmark": expt,
             })
             for expt in benchmarks
-            if expt in stats.expts.keys()
-        ]        
+            if expt in stats.mrc.keys() and len(stats.mrc[expt].cache_sizes) > 0
+        ]
 
+        if len(df_list)== 0:
+            continue
         df_long = pd.concat(df_list, ignore_index=True)
 
         sns.lineplot(
@@ -217,7 +219,7 @@ def plot_mpki(workload_set, benchmarks, stats_list, graph, hue_order):
         #marker='o',
     )
     
-    plt.ylim(0, 100.0)
+    plt.ylim(0, 150.0)
     vertical_offset = 0.1
     for patch in ax.patches:
         # Get the height (value) and the center x-position of the bar
