@@ -1,8 +1,6 @@
-#!/opt/homebrew/bin/python3.12
-
-from plot_scripts.utils.Stats import CacheStats
-from plot_scripts.utils.Plots import *
-from plot_scripts.utils.Workloads import *
+from utils.Stats import CacheStats
+from utils.Plots import *
+from utils.Workloads import *
 
 import os
 import re
@@ -25,25 +23,31 @@ def setMRCStats(stats, expt, stat_file, num_sets, suite, graph):
         if "Instruction count" in line:
             line_list = line.split()
             num_instruction = int(line_list[5])
-        if "MPKI" in line:
-            line_list = line.split()
-            stats.mrc[expt].cache_sizes.append(num_sets)
-            stats.mrc[expt].miss_rate.append(float(line_list[1]))
         elif "Partial misses" in line:
             line_list = line.split()[2:]
             for item in line_list:
                 num_misses = int(item.split(':')[0])
                 count = int(item.split(':')[1])
                 stats.mrc[expt].partial_misses[num_misses] = (count/num_instruction)*1000
+        else:
+            line_list = line.split('|')
+            if len(line_list) < 4 or "MPKI" in line:
+                continue
+            cache_size =  int(line_list[0])/(1024*1024)
+            stats.mrc[expt].cache_sizes.append(cache_size)
+            stats.mrc[expt].miss_rate.append(float(line_list[3]))
+
 
     return
 
 
-def populateStats(stats, results_dir, graph, block_size, multiple_traces):
-    output_dir = os.path.join("results", results_dir, "expt", "outputs")
+def populateStats(stats, results_dir, graph, block_size, num_sets, multiple_traces):
+    output_dir = os.path.join(results_dir, "expt", "outputs")
     for stats_dir in os.listdir(output_dir):
         pattern = r"blkSize_(\d+)_set_(\d+)"
         if (int(re.match(pattern, stats_dir).group(1)) != block_size):
+            continue
+        if (int(re.match(pattern, stats_dir).group(2)) != num_sets):
             continue
         num_sets = int(re.match(pattern, stats_dir).group(2))
         baseDir = os.getcwd()
@@ -100,25 +104,18 @@ def populateStats(stats, results_dir, graph, block_size, multiple_traces):
 
 def plot_partials(workload_set, benchmarks, stats, graph, hue_order):
     for expt in benchmarks:
-        print(expt)
         if expt not in stats.mrc.keys():
             continue
         df = pd.DataFrame(
             list(stats.mrc[expt].partial_misses.items()), columns=['MPKI', 'Number of Requests'])
-        #hue_order = sorted(df['Cache Block Size'].unique(), 
-        #                   reverse=True)
-        print(df)
-        #df = df.sort_values(
-        #    by=["Cache Block Size"],
-        #    ascending=False
-        #)         
         ax = sns.barplot(
             data=df,
             x="MPKI",      # The shared x-axis variable
             y="Number of Requests",     # The y-axis variable
-            #hue="Legend", # The categorical variable that defines each line
+            hue="MPKI", # The categorical variable that defines each line
             palette="pastel",
-            #hue_order=hue_order,
+            hue_order=hue_order,
+            legend =False,
             #marker='o',
         )
 
@@ -151,36 +148,36 @@ def plot_partials(workload_set, benchmarks, stats, graph, hue_order):
         plt.ylabel("Misses")
         plt.tight_layout()
         save_path = os.path.join(plot_save_dir, f"{expt}_partial_misses.png")
-        print(save_path)
         plt.savefig(save_path, bbox_inches='tight')
         plt.close()
     return
 
 baseDir = os.getcwd()
-graph="as-Skitter"
-result_dir="mrc_sweep_11_25"
-out_dir="mrc_sweep_11_18_" + graph
+graph="com-lj"
+result_dir="results/mrc_sweep_11_27"
+num_sets = 8192
 multiple_traces=True
 mrc=True
 footprint=True
 stats_64 = CacheStats("L1D")
 stats_08 = CacheStats("L1D")
-populateStats(stats_64, result_dir, graph, 64, multiple_traces)
-populateStats(stats_08, result_dir, graph, 8, multiple_traces)
+populateStats(stats_64, result_dir, graph, 64, num_sets, multiple_traces)
+populateStats(stats_08, result_dir, graph, 8, num_sets, multiple_traces)
 workloadSet["all"] = stats_64.exptList
 stats_64.desc="Baseline (64B)"
 stats_08.desc="LRU2 (8B)"
 
+out_dir=os.path.join("mrc_sweep_11_18_" + graph, "num_sets_" + str(num_sets))
+
 hue_order = ["Baseline (64B)", "LRU2(8B)"]
 
-#Plotting
-#for workload in ["PageRank", "PageRankDelta", "Radii", "Triangle", "BFS", "BFSCC", "BC", "MIS", "Components", "BellmanFord", "CF",
-#                 "perlbench_s", "gcc_s", "bwaves_s", "mcf_s", "cactuBSSN_s", "lbm_s",  "omnetpp_s", "wrf_s", "xalancbmk_s", "x264_s", "cam4_s", "pop2_s", "deepsjeng_s", "imagick_s", "leela_s", "nab_s", "exchange2_s", "fotonik3d_s", "roms_s", "xz_s",
-#                 "perlbench", "bzip2", "gcc", "bwaves", "gamess", "mcf", "milc", "zeusmp", "gromacs", "cactusADM", "leslie3d", "namd", "gobmk", "dealII", "soplex", "povray", "calculix", "hmmer", "sjeng", "GemsFDTD", "libquantum", "h264ref", "tonto", "lbm", "omnetpp", "astar", "wrf", "sphinx3", "xalancbmk",
-#                 "blackscholes", "bodytrack", "canneal", "dedup", "dedup", "facesim", "fluidanimate", "raytrace", "streamcluster", "swaptions", "vips",
-#                 "gap"]:
 workloadSet["as-Skitter"] = ["BFS_0M", "BFS_100M"]
-for workload in ["as-Skitter"]:
+#Plotting
+for workload in ["PageRank", "PageRankDelta", "Radii", "Triangle", "BFS", "BFSCC", "BC", "MIS", "Components", "BellmanFord", "CF",
+                 "perlbench_s", "gcc_s", "bwaves_s", "mcf_s", "cactuBSSN_s", "lbm_s",  "omnetpp_s", "wrf_s", "xalancbmk_s", "x264_s", "cam4_s", "pop2_s", "deepsjeng_s", "imagick_s", "leela_s", "nab_s", "exchange2_s", "fotonik3d_s", "roms_s", "xz_s",
+                 "perlbench", "bzip2", "gcc", "bwaves", "gamess", "mcf", "milc", "zeusmp", "gromacs", "cactusADM", "leslie3d", "namd", "gobmk", "dealII", "soplex", "povray", "calculix", "hmmer", "sjeng", "GemsFDTD", "libquantum", "h264ref", "tonto", "lbm", "omnetpp", "astar", "wrf", "sphinx3", "xalancbmk",
+                 "blackscholes", "bodytrack", "canneal", "dedup", "dedup", "facesim", "fluidanimate", "raytrace", "streamcluster", "swaptions", "vips",
+                 "gap"]:
     set_save_path(os.path.join(out_dir, "mrc"))
     plot_mrc(workload, workloadSet[workload], [stats_64, stats_08], graph)
     plot_partials(workload, workloadSet[workload], stats_08, graph, hue_order)

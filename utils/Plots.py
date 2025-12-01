@@ -47,16 +47,17 @@ def plot_mrc(workload_set, benchmarks, stats_list, graph):
             hue="Benchmark", # The categorical variable that defines each line
             hue_order=hue_order,
             palette="Paired",
-            marker='o',
+            #marker='o',
         )
         plt.xscale('log', base=2)
 
-        formatter = ticker.FuncFormatter(lambda v, pos: Fraction(v).limit_denominator())
+        formatter = ticker.FuncFormatter(lambda v, pos: f"{Fraction(v).limit_denominator()}")
         #Apply the formatter to the y-axis major ticks
         plt.gca().xaxis.set_major_formatter(formatter)
 
         plt.ylim(0, 250)
-        plt.xlabel("Cache Size (KB)")
+        plt.xlim(1, 1024)
+        plt.xlabel("Cache Size (MB)")
         plt.ylabel("MPKI")
         plt.title(f"MRC for {workload_set} (Cache Block Size {stats.block_size}B)")
         save_path = os.path.join(plot_save_dir, f"{workload_set}_mrc_blkSize_{stats.block_size}.png")

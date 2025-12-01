@@ -161,7 +161,7 @@ class CacheStats:
         return
     
     def populateStats(self, results_dir, graph, block_size, num_ways, multiple_traces=False):        
-        stats_dir = os.path.join("results", results_dir, "expt", "outputs", f"blkSize_{block_size}_way_{num_ways}")
+        stats_dir = os.path.join(results_dir, "expt", "outputs", f"blkSize_{block_size}_way_{num_ways}")
         baseDir = os.getcwd()
         os.chdir(os.path.join(baseDir, stats_dir))
         self.block_size = block_size
