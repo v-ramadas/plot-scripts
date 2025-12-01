@@ -24,22 +24,28 @@ def plot_mrc(workload_set, benchmarks, stats_list, graph):
         df_list = [
             pd.DataFrame({
                 "Cache Size": stats.mrc[expt].cache_sizes,
-                "Miss Rate": stats.mrc[expt].miss_rate,
+                "MPKI": stats.mrc[expt].miss_rate,
                 "Benchmark": expt,
             })
             for expt in benchmarks
             if expt in stats.mrc.keys() and len(stats.mrc[expt].cache_sizes) > 0
         ]
 
-        if len(df_list)== 0:
+        if len(df_list) == 0:
             continue
         df_long = pd.concat(df_list, ignore_index=True)
 
-        sns.lineplot(
+        df_long = df_long.sort_values(
+            by=["Cache Size"],
+            ascending=True)
+        hue_order = sorted(df_long['Benchmark'].unique())
+
+        ax = sns.lineplot(
             data=df_long,
             x="Cache Size",      # The shared x-axis variable
-            y="Miss Rate",     # The y-axis variable
+            y="MPKI",     # The y-axis variable
             hue="Benchmark", # The categorical variable that defines each line
+            hue_order=hue_order,
             palette="Paired",
             marker='o',
         )
@@ -49,9 +55,9 @@ def plot_mrc(workload_set, benchmarks, stats_list, graph):
         #Apply the formatter to the y-axis major ticks
         plt.gca().xaxis.set_major_formatter(formatter)
 
-        plt.ylim(0, 1.0)
+        plt.ylim(0, 250)
         plt.xlabel("Cache Size (KB)")
-        plt.ylabel("Miss Rate")
+        plt.ylabel("MPKI")
         plt.title(f"MRC for {workload_set} (Cache Block Size {stats.block_size}B)")
         save_path = os.path.join(plot_save_dir, f"{workload_set}_mrc_blkSize_{stats.block_size}.png")
         plt.savefig(save_path, bbox_inches='tight')
@@ -59,24 +65,31 @@ def plot_mrc(workload_set, benchmarks, stats_list, graph):
     return
 
 def plot_footprint(workload_set, benchmarks, stats_list, graph):
-        df = pd.concat([
+        df_list = [
             pd.DataFrame({
-                "Footprint": [(stats.expts[expt].cold_misses * stats.block_size) / (1024.0 * 1024.0)],
+                "Footprint": [stats.mrc[expt].cache_sizes[-1]],
                 "Benchmark": [expt],
                 "Cache Block Size": [stats.block_size],
             })
             for expt in benchmarks
             for stats in stats_list
             if expt in stats.expts.keys()
-        ])
+        ]
+
+        print(workload_set)
+        if len(df_list) == 0:
+            print(f'{workload_set} does not have valid data. Skipping')
+            return
+        df = pd.concat(df_list)
 
         hue_order = sorted(df['Cache Block Size'].unique(), 
                            reverse=True)
-        
         df = df.sort_values(
             by=["Footprint"],
             ascending=False,
         )
+
+        print(df)
 
         ax = sns.barplot(
             data=df,
@@ -85,7 +98,6 @@ def plot_footprint(workload_set, benchmarks, stats_list, graph):
             hue="Cache Block Size", # The categorical variable that defines each line
             palette="pastel",
             hue_order=hue_order,
-            #marker='o',
         )
         
         plt.ylim(1, 1*1024)

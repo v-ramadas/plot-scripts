@@ -62,6 +62,19 @@ workloadSet = {
         "wrf": ["wrf_1170B", "wrf_1254B", "wrf_1281B", "wrf_196B", "wrf_455B", "wrf_816B"],
         "sphinx3": ["sphinx3_1100B", "sphinx3_1297B", "sphinx3_1395B", "sphinx3_1522B", "sphinx3_234B", "sphinx3_417B"],
         "xalancbmk": ["xalancbmk_127B", "xalancbmk_716B", "xalancbmk_736B"],
+        #PARSEC
+        "blackscholes": ["blackscholes_2000M", "blackscholes_3000M", "blackscholes_4000M"],
+        "bodytrack": ["bodytrack_2000M", "bodytrack_3500M", "bodytrack_6750M"],
+        "canneal": ["canneal_0M", "canneal_1250M", "canneal_3000M", "canneal_4500M", "canneal_4750M", "canneal_5000M", "canneal_500M"],
+        "dedup": ["dedup_29000M", "dedup_3750M", "dedup_7250M"],
+        "facesim": ["facesim_11750M", "facesim_21500M", "facesim_4750M", "facesim_5000M", "facesim_750M", "facesim_9750M"], #"facesim_1500M"
+        "fluidanimate": ["fluidanimate_10000M", "fluidanimate_10250M", "fluidanimate_9500M"],
+        "raytrace": ["raytrace_16500M", "raytrace_23500M", "raytrace_23750M", "raytrace_25000M", "raytrace_250M", "raytrace_25500M", "raytrace_36250", "raytrace_37000M"],
+        "streamcluster": ["streamcluster_0M", "streamcluster_14750M", "streamcluster_250M", "streamcluster_4750M", "streamcluster_6250M"],
+        "swaptions": ["swaption_0M", "swaptions_15000M", "swaptions_5250M", "swaptions_6500M"],
+        "vips": ["vips_10500M", "vips_19250M", "vips_25250M", "vips_27250M", "vips_32250M", "vips_33250M", "vips_7500M"],
+        #GAP
+        "gap": ["bc-0", "bc-12", "bfs-10", "bfs-14", "cc-5", "cc-13", "cc-14", "sssp-10", "sssp-14"],
         #UBENCH
         "ubench": ["ubench_stream", "ubench_stride_2", "ubench_stride_4", "ubench_stride_8", "spmv"],
         #CUSTOM

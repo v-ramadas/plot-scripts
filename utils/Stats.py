@@ -41,6 +41,7 @@ class CacheStats:
             self.cumulative_hits = []
             self.misses = []
             self.miss_rate = []
+            self.partial_misses = {}
             self.suite = ""
             self.graph = ""
             return
@@ -142,7 +143,7 @@ class CacheStats:
             self.expts[expt].suite = suite
             self.expts[expt].graph = graph
         for line in f:
-            if "Miss Ratio Curve (MRC)" in line and self.cache_name in line:
+            if "MPKI Curve (MpkiC)" in line:
                 start_stats = True
                 next(f)
                 next(f)
@@ -153,7 +154,7 @@ class CacheStats:
                     # End of MRC stats
                     return
 
-                self.mrc[expt].cache_sizes.append(float(line_list[0].strip())*self.block_size/1024.0)
+                self.mrc[expt].cache_sizes.append(float(line_list[0].strip())*self.block_size/(1024.0 * 1024.0))
                 self.mrc[expt].cumulative_hits.append(int(line_list[1].strip()))
                 self.mrc[expt].misses.append(int(line_list[2].strip()))
                 self.mrc[expt].miss_rate.append(float(line_list[3].strip()))
@@ -191,12 +192,16 @@ class CacheStats:
                 suite = "spec2017"
                 inst_dropped_pattern = r'(\d+B)\.champsimtrace'
             elif "parsec" in expt_file:
-                #pattern = r"\.([a-zA-Z]+)\.simlarge"
-                #suite = "parsec"
-                continue
+                pattern = r"parsec_parsec_2.1.(.*?)\."
+                suite = "parsec"
+                inst_dropped_pattern = r'drop_(\d+M)\.'
+            elif "gap" in expt_file:
+                pattern = r"gap_(.*?)\."
+                suite = "gap"
             else:
                 pattern = r'^([^.]+)'
                 suite = "ubench"
+                
             expt = (re.match(pattern, expt_file).group(1))
             simpoints_inst_dropped = ""
             if inst_dropped_pattern != "" and multiple_traces:
