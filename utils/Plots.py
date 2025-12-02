@@ -40,14 +40,16 @@ def plot_mrc(workload_set, benchmarks, stats_list, graph):
             ascending=True)
         hue_order = sorted(df_long['Benchmark'].unique())
 
-        ax = sns.lineplot(
+        ax = sns.scatterplot(
             data=df_long,
             x="Cache Size",      # The shared x-axis variable
             y="MPKI",     # The y-axis variable
             hue="Benchmark", # The categorical variable that defines each line
             hue_order=hue_order,
             palette="Paired",
-            #marker='o',
+            marker="_",
+            size=15,
+            linewidth=2.5,
         )
         plt.xscale('log', base=2)
 
